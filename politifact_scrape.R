@@ -13,7 +13,7 @@ pageNum <- 1:3 #全体を表示できないので手動
 rank <- c("true", "mostly-true", "half-true", #真実度合いのスコア化
           "mostly-false", "false", "pants-fire")
 df <- data.frame("description"=NULL, "url"=NULL, "person"=NULL, "text"=NULL, "rank"=NULL)
-for(i in pageNum){
+for(i in 1:length(pageNum)){
   for(j in 1:pageNum){
     link <- paste0("https://www.politifact.com/factchecks/list/?page=", 
                    j, "&category=truth-o-meter&ruling=", rank[i])
