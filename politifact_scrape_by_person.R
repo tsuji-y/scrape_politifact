@@ -1,3 +1,4 @@
+##個人のスコアシートを全て読み込みたい時に使うやつ
 #ライブラリの読み込み-----
 library(rvest)
 library(stringr)
