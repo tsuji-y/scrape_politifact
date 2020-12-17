@@ -1,4 +1,3 @@
-library(lubridate)
 library(rvest)
 library(stringr)
 library(tidyverse)
@@ -11,7 +10,7 @@ dir.create(dir_path)
 #politifactのスクレイピング
 pageNum <- 1:3 #全体を表示できないので手動
 rank <- c("true", "mostly-true", "half-true", #真実度合いのスコア化
-          "mostly-false", "false", "pants-fire")
+          "barely-true", "false", "pants-fire")
 df <- data.frame("description"=NULL, "url"=NULL, "person"=NULL, "text"=NULL, "rank"=NULL)
 for(i in 1:length(rank)){
   for(j in 1:(pageNum)){
