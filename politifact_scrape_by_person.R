@@ -28,53 +28,50 @@ mat_urls <- bind_cols("urls" = persons_url,
 
 ##各自のスコアシートを取得-----
 #空のデータフレームを作成
-fact_check_list <- data.frame("name"=NULL, "belong"=NULL, "True_percentage"=NULL, 
-                              "url" = NULL, "Mostly True_percentage"=NULL,
-                              "Half True_percentage"=NULL, 
-                              "Mostly False_percentage"=NULL,
-                              "False_percentage"=NULL,
-                              "Pants on Fire_percentage"=NULL,
-                              "True_cheks"=NULL,"Mostly True_cheks"=NULL,
-                              "Half True_cheks"=NULL,"Mostly False_cheks"=NULL,
-                              "False_cheks"=NULL,"Pants on Fire_cheks"=NULL)
+fact_check_list <- data.frame("name"=NA, "belong"=NA, "True_percentage"=NA, 
+                              "url" = NA, "MostlyTrue_percentage"=NA,
+                              "HalfTrue_percentage"=NA, 
+                              "MostlyFalse_percentage"=NA,
+                              "False_percentage"=NA,
+                              "PantsOnFire_percentage"=NA,
+                              "True_cheks"=NA,"MostlyTrue_cheks"=NA,
+                              "HalfTrue_cheks"=NA,"MostlyFalse_cheks"=NA,
+                              "False_cheks"=NA,"PantsOnFire_cheks"=NA)
 
 ##個別のページにアクセス
 for(i in 1:nrow(mat_urls)){
   link_each <- paste0("https://www.politifact.com", mat_urls[i ,"urls"])
-  page_each <- read_html(link_each)
-  name_person <- page_each %>%
-    html_node("h1.m-pageheader__title") %>%
-    html_text()
-  Sys.sleep(3)
-  
-  scorecard_per <- page_each %>% # pull out fact-check score
-    html_nodes("span.m-scorecard__value") %>%
-    html_text() %>%
-    str_remove_all("\n0%\n|\n| |%") %>%
-    as.integer() 
-  scorecard_checks <- page_each %>% # number of fact checks
-    html_nodes(xpath = "//*[@id=\"top\"]/main/section[4]/div/article/div") %>%
-    html_nodes("a") %>%
-    html_text() %>%
-    str_remove_all(" Checks") %>%
-    as.integer()
-  
-  score_names <- page_each %>% #fact check ランクの名称
-    html_nodes("h4.m-scorecard__title") %>%
-    html_text() %>%
-    str_remove_all("\n")
-  names(scorecard_per) <-  score_names %>% #fact check percentage
-    paste(., "percentage", sep = "_")
-  names(scorecard_checks) <- score_names %>% #number of checks
-    paste(., "cheks", sep = "_")
-  
-  vec <- c("name" = name_person, "belong" = mat_urls$belongs[i], 
-           "url" = link_each,
-           scorecard_per, scorecard_checks)
-  fact_check_list <- bind_rows(fact_check_list, vec)
-  cat("done", i, "/", nrow(mat_urls), "\n")
+  page_each <- tryCatch(read_html(link_each), 
+                        error = function(e) e)
+  Sys.sleep(2)
+  if(!inherits(page_each, "error")){
+    #REAL WORK
+    name_person <- page_each %>%
+      html_node("h1.m-pageheader__title") %>%
+      html_text()
+    
+    scorecard_per <- page_each %>% #fact check スコア(%)
+      html_nodes(".m-scorecard__value") %>%
+      html_nodes("span")%>%
+      html_text() %>%
+      as.integer()
+    
+    scorecard_checks <- page_each %>% #fact check チェック数
+      html_nodes(".m-scorecard__checks") %>%
+      html_nodes("a") %>%
+      html_text() %>%
+      str_remove_all("\\W| |Checks")
+    
+    vec <- c(name_person, mat_urls$belongs[i], link_each,
+                      scorecard_per, scorecard_checks)
+    fact_check_list <- rbind(fact_check_list, vec)
+    cat("done", i, "/", nrow(mat_urls), "\n")
+  }else{
+    #IF ERROR OCCURS
+    cat("EMPTY PAGE: done", i, "/", nrow(mat_urls), "\n")
+  }
 }
+fact_check_list <- fact_check_list[-1,] #1行目にNA入れちゃったから削除
 write_csv(fact_check_list, 
           paste(dir_path, "politifact_allmem_scoresheet.csv", sep = "/"))
-
 
